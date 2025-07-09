@@ -11,11 +11,12 @@ const { type } = require("os");
 app.use(express.json());
 app.use(
   cors({
-    origin: "*", 
+    origin: "http://localhost:3000",
     methods: ["GET", "POST", "PUT", "DELETE"],
     credentials: true,
   })
 );
+
 
 
 // Database connection
