@@ -11,7 +11,9 @@ const { type } = require("os");
 app.use(express.json());
 app.use(
   cors({
-    origin: ["http://localhost:3000", "https://ecommerce-frontend-bice-rho.vercel.app"],
+    origin: ["http://localhost:3000", 
+      "http://localhost:5173",   
+      "https://ecommerce-frontend-bice-rho.vercel.app"],
     methods: ["GET", "POST", "PUT", "DELETE"],
     credentials: true,
   })
