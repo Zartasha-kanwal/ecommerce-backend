@@ -1,5 +1,5 @@
 const port = 4000;
-require("dotenv").config(); 
+require("dotenv").config();
 const express = require("express");
 const app = express();
 const mongoose = require("mongoose");
@@ -9,10 +9,12 @@ const path = require("path");
 const cors = require("cors");
 app.use(
   cors({
-    origin: ["http://localhost:3000", 
-      "http://localhost:5173",   
-       "http://localhost:5176",
-      "https://ecommerce-frontend-bice-rho.vercel.app"],
+    origin: [
+      "http://localhost:3000",
+      "http://localhost:5173",
+      "http://localhost:5176",
+      "https://ecommerce-frontend-bice-rho.vercel.app",
+    ],
     methods: ["GET", "POST", "PUT", "DELETE"],
     credentials: true,
   })
@@ -21,9 +23,6 @@ const cloudinary = require("cloudinary").v2;
 const fs = require("fs");
 const { type } = require("os");
 
-
-
-
 app.use(express.json());
 
 cloudinary.config({
@@ -31,9 +30,6 @@ cloudinary.config({
   api_key: process.env.CLOUDINARY_API_KEY,
   api_secret: process.env.CLOUDINARY_API_SECRET,
 });
-
-
-
 
 // Database connection
 mongoose.connect(
@@ -44,7 +40,6 @@ mongoose.connect(
 app.get("/", (req, res) => {
   res.send("Express App is running");
 });
-
 
 /// Temporary Multer upload setup
 const upload = multer({ dest: "temp/" });
@@ -66,7 +61,6 @@ app.post("/upload", upload.single("product"), async (req, res) => {
     res.status(500).json({ success: 0, message: "Upload failed" });
   }
 });
-
 
 //Schema
 const Product = mongoose.model("Product", {
@@ -159,12 +153,10 @@ const Users = mongoose.model("Users", {
 app.post("/signup", async (req, res) => {
   let check = await Users.findOne({ email: req.body.email });
   if (check) {
-    return res
-      .status(400)
-      .json({
-        success: false,
-        errors: "Existing User found with same email address",
-      });
+    return res.status(400).json({
+      success: false,
+      errors: "Existing User found with same email address",
+    });
   }
   let cart = {};
   for (let i = 0; i < 300; i++) {
@@ -202,79 +194,77 @@ app.post("/login", async (req, res) => {
       const token = jwt.sign(data, "secret_ecom");
       res.json({ success: true, token });
     } else {
-      res.json({success:false,errors:"Wrong Password"});
+      res.json({ success: false, errors: "Wrong Password" });
     }
-  } else{
-    res.json({success:false,errors:"Wrong Email Id"})
+  } else {
+    res.json({ success: false, errors: "Wrong Email Id" });
   }
 });
 
 //Creating EndPoint for New Collection Data
-app.get('/newcollections', async(req,res)=>{
-  let products =await Product.find({});
-  let newcollection =products.slice(1).slice(-8);
+app.get("/newcollections", async (req, res) => {
+  let products = await Product.find({});
+  let newcollection = products.slice(1).slice(-8);
   console.log("New collection fetched");
   res.send(newcollection);
-})
+});
 
 //Creating Endpoint For Popular in Women Section
-app.get('/popularinwomen', async(req,res)=>{
-   let products =await Product.find({category:"women"});
-   let popular_in_women = products.slice(0,4);
-   console.log("Popular in women Fetched")
-   res.send(popular_in_women);
-
-})
+app.get("/popularinwomen", async (req, res) => {
+  let products = await Product.find({ category: "women" });
+  let popular_in_women = products.slice(0, 4);
+  console.log("Popular in women Fetched");
+  res.send(popular_in_women);
+});
 
 //Creating Midlleware to Fetch user
-const fetchUser =(req,res,next)=>{
-  const token = req.header('auth-token');
-  if(!token){
-    res.status(401).send({errors:"Please Authenticate using Valid token"})
-  }else{
-    try{
-      const data =jwt.verify(token,'secret_ecom');
+const fetchUser = (req, res, next) => {
+  const token = req.header("auth-token");
+  if (!token) {
+    res.status(401).send({ errors: "Please Authenticate using Valid token" });
+  } else {
+    try {
+      const data = jwt.verify(token, "secret_ecom");
       req.user = data.user;
       next();
-    } catch (error){
-        res.status(401).send({errors:"Please Authenticate using Valid token"})
+    } catch (error) {
+      res.status(401).send({ errors: "Please Authenticate using Valid token" });
     }
   }
-
-}
+};
 
 //Creating Endpoint For Adding product in Cartdata
-app.post('/addtocart',fetchUser,async (req,res)=>{
-   console.log("Added",req.body.itemId)
-  let userData= await Users.findOne({_id:req.user.id});
-  userData.cartData[req.body.itemId] +=1;
-  await Users.findOneAndUpdate({_id:req.user.id},{cartData:userData.cartData});
-  res.send("Added")
-
-
-}
-
-)
+app.post("/addtocart", fetchUser, async (req, res) => {
+  console.log("Added", req.body.itemId);
+  let userData = await Users.findOne({ _id: req.user.id });
+  userData.cartData[req.body.itemId] += 1;
+  await Users.findOneAndUpdate(
+    { _id: req.user.id },
+    { cartData: userData.cartData }
+  );
+  res.send("Added");
+});
 
 //Creating Endpoint for removing product from Cart data
 
-app.post('/removefromcart',fetchUser,async(req,res)=>{
-  console.log("removed",req.body.itemId)
-  let userData= await Users.findOne({_id:req.user.id});
-  if(userData.cartData[req.body.itemId]>0 )
-  userData.cartData[req.body.itemId] -=1;
-  await Users.findOneAndUpdate({_id:req.user.id},{cartData:userData.cartData});
-  res.send("Removed")
-
-
-})
+app.post("/removefromcart", fetchUser, async (req, res) => {
+  console.log("removed", req.body.itemId);
+  let userData = await Users.findOne({ _id: req.user.id });
+  if (userData.cartData[req.body.itemId] > 0)
+    userData.cartData[req.body.itemId] -= 1;
+  await Users.findOneAndUpdate(
+    { _id: req.user.id },
+    { cartData: userData.cartData }
+  );
+  res.send("Removed");
+});
 
 //Creating Endpoint for retreiving cart data
-app.post('/getcart',fetchUser,async(req,res)=>{
-  console.log("Getcart")
-  let userData= await Users.findOne({_id:req.user.id});
+app.post("/getcart", fetchUser, async (req, res) => {
+  console.log("Getcart");
+  let userData = await Users.findOne({ _id: req.user.id });
   res.json(userData.cartData);
-})
+});
 
 app.listen(port, (error) => {
   if (!error) {
