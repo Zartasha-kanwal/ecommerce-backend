@@ -7,11 +7,6 @@ const jwt = require("jsonwebtoken");
 const multer = require("multer");
 const path = require("path");
 const cors = require("cors");
-const cloudinary = require("cloudinary").v2;
-const fs = require("fs");
-const { type } = require("os");
-
-
 app.use(
   cors({
     origin: ["http://localhost:3000", 
@@ -22,6 +17,12 @@ app.use(
     credentials: true,
   })
 );
+const cloudinary = require("cloudinary").v2;
+const fs = require("fs");
+const { type } = require("os");
+
+
+
 
 app.use(express.json());
 
