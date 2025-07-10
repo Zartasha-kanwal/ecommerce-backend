@@ -24,6 +24,7 @@ const fs = require("fs");
 const { type } = require("os");
 
 app.use(express.json());
+app.use('/uploads', express.static(path.join(__dirname, 'upload/images')));
 
 cloudinary.config({
   cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
