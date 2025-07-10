@@ -24,7 +24,7 @@ const fs = require("fs");
 const { type } = require("os");
 
 app.use(express.json());
-app.use('/uploads', express.static(path.join(__dirname, 'upload/images')));
+app.use("/uploads", express.static(path.join(__dirname, "upload/images")));
 
 cloudinary.config({
   cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
@@ -236,35 +236,78 @@ const fetchUser = (req, res, next) => {
 
 //Creating Endpoint For Adding product in Cartdata
 app.post("/addtocart", fetchUser, async (req, res) => {
-  console.log("Added", req.body.itemId);
-  let userData = await Users.findOne({ _id: req.user.id });
-  userData.cartData[req.body.itemId] += 1;
-  await Users.findOneAndUpdate(
-    { _id: req.user.id },
-    { cartData: userData.cartData }
-  );
-  res.send("Added");
+  try {
+    const itemId = req.body.itemId;
+    const userId = req.user.id;
+
+    let user = await Users.findById(userId);
+
+    // Make sure cartData exists
+    if (!user.cartData) {
+      user.cartData = {};
+    }
+
+    // Make sure the itemId is initialized
+    if (!user.cartData[itemId]) {
+      user.cartData[itemId] = 0;
+    }
+
+    user.cartData[itemId] += 1;
+
+    // Only update the one field, not overwrite whole cart
+    await Users.updateOne(
+      { _id: userId },
+      { $set: { [`cartData.${itemId}`]: user.cartData[itemId] } }
+    );
+
+    res.json({ success: true, cartData: user.cartData });
+  } catch (err) {
+    console.error("Add to cart error:", err);
+    res.status(500).json({ success: false, message: "Add to cart failed" });
+  }
 });
 
 //Creating Endpoint for removing product from Cart data
 
 app.post("/removefromcart", fetchUser, async (req, res) => {
-  console.log("removed", req.body.itemId);
-  let userData = await Users.findOne({ _id: req.user.id });
-  if (userData.cartData[req.body.itemId] > 0)
-    userData.cartData[req.body.itemId] -= 1;
-  await Users.findOneAndUpdate(
-    { _id: req.user.id },
-    { cartData: userData.cartData }
-  );
-  res.send("Removed");
+  try {
+    const itemId = req.body.itemId;
+    const userId = req.user.id;
+
+    let user = await Users.findById(userId);
+
+    if (user.cartData && user.cartData[itemId]) {
+      user.cartData[itemId] = Math.max(user.cartData[itemId] - 1, 0);
+
+      await Users.updateOne(
+        { _id: userId },
+        { $set: { [`cartData.${itemId}`]: user.cartData[itemId] } }
+      );
+    }
+
+    res.json({ success: true, cartData: user.cartData });
+  } catch (err) {
+    console.error("Remove from cart error:", err);
+    res
+      .status(500)
+      .json({ success: false, message: "Remove from cart failed" });
+  }
 });
 
 //Creating Endpoint for retreiving cart data
-app.post("/getcart", fetchUser, async (req, res) => {
-  console.log("Getcart");
-  let userData = await Users.findOne({ _id: req.user.id });
-  res.json(userData.cartData);
+app.get("/getcart", fetchUser, async (req, res) => {
+  try {
+    const user = await Users.findById(req.user.id);
+
+    if (!user.cartData) {
+      user.cartData = {};
+    }
+
+    res.json({ cartItems: user.cartData });
+  } catch (err) {
+    console.error("Get cart error:", err);
+    res.status(500).json({ success: false, message: "Failed to get cart" });
+  }
 });
 
 app.listen(port, (error) => {
