@@ -11,7 +11,7 @@ const cloudinary = require("cloudinary").v2;
 const fs = require("fs");
 const { type } = require("os");
 
-app.use(express.json());
+
 app.use(
   cors({
     origin: ["http://localhost:3000", 
@@ -21,6 +21,8 @@ app.use(
     credentials: true,
   })
 );
+
+app.use(express.json());
 
 cloudinary.config({
   cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
